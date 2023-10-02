@@ -89,6 +89,10 @@ int ClockStart = 30;
 int Clock = ClockStart; // Start Zahl
 String ClockStr = "30";
 int B_Level = 8;
+String ClockMsg;
+
+long lastSendTime = 0;
+const long LORA_SEND_INTERVAL_MS = 200;
 
 unsigned long ms;              // current time from millis()
 unsigned long msLastStop;      // last time Button Pause
@@ -153,16 +157,6 @@ void notifyClients(String message)
 
 void lorasend(String Msg)
 {
-
-  if (Clock < 10)
-  { // wird das noch gebraucht?? redundant??
-    ClockStr = "0" + String(Clock);
-  }
-  else
-  {
-    ClockStr = String(Clock);
-  }
-
   if (smartControl == false)
   {
     Heltec.display->clear();
@@ -178,6 +172,7 @@ void lorasend(String Msg)
   unsigned long ms2 = millis();
 
   sendToClock(Msg);
+  lastSendTime = ms2;
 
   unsigned long ms3 = millis();
   Serial.print("Dauer Senden: ");
@@ -186,17 +181,16 @@ void lorasend(String Msg)
 }
 
 void updateTime(){
-  Clock = ClockStart;
   String Command_T = "T";
-  String ClockMsg;
   if (Clock < 10)
   {
-    ClockMsg = Command_T + 0 + Clock + B_Level;
+    ClockStr = "0" + String(Clock);
   }
   else
   {
-    ClockMsg = Command_T + Clock + B_Level;
+    ClockStr = String(Clock);
   }
+  ClockMsg = Command_T + ClockStr + B_Level;
   lorasend(ClockMsg);
   notifyClients(String(Clock));
   ws.cleanupClients();
@@ -297,6 +291,7 @@ void stopCount()
 
 void resetClock(bool play)
 {
+  Clock = ClockStart;
   Serial.println("RESET");
 
   updateTime();
@@ -484,6 +479,14 @@ void sendBCommand()
 {
   String command_B = "B";
   sendToClock(command_B);
+}
+
+void sendTimeEveryXms() {
+  long now = millis();
+  if (now > lastSendTime + LORA_SEND_INTERVAL_MS) {
+    sendToClock(ClockMsg);
+    lastSendTime = now;
+  }
 }
 
 String processor(const String &var)
@@ -710,6 +713,7 @@ enum states_t
 
 void loop()
 {
+  // sendTimeEveryXms();
 
   static states_t STATE; // current state machine state
   ms = millis();         // record the current time
