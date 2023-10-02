@@ -185,6 +185,24 @@ void lorasend(String Msg)
   Serial.print(" -- ");
 }
 
+void updateTime(){
+  Clock = ClockStart;
+  String Command_T = "T";
+  String ClockMsg;
+  if (Clock < 10)
+  {
+    ClockMsg = Command_T + 0 + Clock + B_Level;
+  }
+  else
+  {
+    ClockMsg = Command_T + Clock + B_Level;
+  }
+  lorasend(ClockMsg);
+  notifyClients(String(Clock));
+  ws.cleanupClients();
+  Serial.println(ClockMsg);
+}
+
 void sendToClock(String Msg)
 {
   // send packet
@@ -246,22 +264,7 @@ void Count()
         FLEX_INTERVAL = 1000;
       }
 
-      String Command_T = "T";
-      String ClockMsg;
-      if (Clock < 10)
-      {
-        ClockMsg = Command_T + 0 + Clock + B_Level;
-      }
-      else
-      {
-        ClockMsg = Command_T + Clock + B_Level;
-      }
-      // ledStateMsg += ledState;
-      lorasend(ClockMsg); // für RS-485 Test abgeschaltet
-
-      notifyClients(String(Clock));
-      ws.cleanupClients();
-      Serial.println(ClockMsg);
+      updateTime();
 
       ledState = false;
       // digitalWrite(LED_PIN, ledState);
@@ -287,48 +290,17 @@ void stopCount()
   }
   if (ms - msLastStopCount >= 1000)
   {
-    String Command_T = "T";
-    String ClockMsg;
-    if (Clock < 10)
-    {
-      ClockMsg = Command_T + 0 + Clock + B_Level;
-    }
-    else
-    {
-      ClockMsg = Command_T + Clock + B_Level;
-    }
-    /*String Command_T = "T";
-    String ClockMsg = Command_T + Clock;*/
-    // ledStateMsg += ledState;
-    lorasend(ClockMsg);
-    notifyClients(String(Clock));
-    ws.cleanupClients();
-    Serial.println(ClockMsg);
+    updateTime();
     msLastStopCount = ms;
   }
 }
 
 void resetClock(bool play)
 {
-  Clock = ClockStart;
-  String Command_T = "T";
-  String ClockMsg;
-  if (Clock < 10)
-  {
-    ClockMsg = Command_T + 0 + Clock + B_Level;
-  }
-  else
-  {
-    ClockMsg = Command_T + Clock + B_Level;
-  }
-  /*String Command_T = "T";
-  String ClockMsg = Command_T + Clock;*/
-  lorasend(ClockMsg);
-  notifyClients(String(Clock));
-  ws.cleanupClients();
-  // TelnetMsg(ClockMsg);
   Serial.println("RESET");
-  Serial.println(ClockMsg);
+
+  updateTime();
+
   setStart();
   playState = play;
   if (play == true)
