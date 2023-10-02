@@ -174,10 +174,10 @@ void lorasend(String Msg)
   sendToClock(Msg);
   lastSendTime = ms2;
 
-  unsigned long ms3 = millis();
-  Serial.print("Dauer Senden: ");
-  Serial.print(ms3 - ms2);
-  Serial.print(" -- ");
+  // unsigned long ms3 = millis();
+  // Serial.print("Dauer Senden: ");
+  // Serial.print(ms3 - ms2);
+  // Serial.print(" -- ");
 }
 
 void updateTime(){
@@ -194,7 +194,7 @@ void updateTime(){
   lorasend(ClockMsg);
   notifyClients(String(Clock));
   ws.cleanupClients();
-  Serial.println(ClockMsg);
+  // Serial.println(ClockMsg);
 }
 
 void sendToClock(String Msg)
@@ -216,6 +216,9 @@ void sendToClock(String Msg)
 
   // RS-485 Test
   Serial2.println(Msg);
+
+  // Serial.print("Msg sent: ");
+  // Serial.println(Msg);
 }
 
 void Count()
@@ -235,10 +238,10 @@ void Count()
     if (t >= FLEX_INTERVAL)
     {
 
-      abweichung = (t - FLEX_INTERVAL);
-      Serial.print("Abweichung: ");
-      Serial.print(abweichung);
-      Serial.println("ms");
+      // abweichung = (t - FLEX_INTERVAL);
+      // Serial.print("Abweichung: ");
+      // Serial.print(abweichung);
+      // Serial.println("ms");
 
       // FLEX_INTERVAL = FLEX_INTERVAL + t;
       // Serial.print("Ausgleichendes Interval: ");
@@ -713,7 +716,7 @@ enum states_t
 
 void loop()
 {
-  // sendTimeEveryXms();
+  sendTimeEveryXms();
 
   static states_t STATE; // current state machine state
   ms = millis();         // record the current time
