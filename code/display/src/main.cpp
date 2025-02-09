@@ -30,7 +30,7 @@
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <AsyncElegantOTA.h>
+#include <ElegantOTA.h>
 
 #include <Preferences.h>
 #include <Adafruit_PWMServoDriver.h>
@@ -111,6 +111,33 @@ void drawLoraInfo();
 void drawRS485Info();
 bool timeIsUp();
 void setupRadio();
+
+unsigned long ota_progress_millis = 0;
+
+void onOTAStart() {
+  // Log when OTA has started
+  Serial.println("OTA update started!");
+  // <Add your own code here>
+}
+
+void onOTAProgress(size_t current, size_t final) {
+  // Log every 1 second
+  if (millis() - ota_progress_millis > 1000) {
+    ota_progress_millis = millis();
+    Serial.printf("OTA Progress Current: %u bytes, Final: %u bytes\n", current, final);
+  }
+}
+
+void onOTAEnd(bool success) {
+  // Log when OTA has finished
+  if (success) {
+    Serial.println("OTA update finished successfully!");
+  } else {
+    Serial.println("There was an error during OTA update!");
+  }
+  // <Add your own code here>
+}
+
 
 bool timeIsUp() {
   return currentTime == 0 && previousTime != 0;
@@ -194,6 +221,7 @@ void handlePacket(){
   }
   String setTimeCommand = "T";
   String honkCommand = "H";
+  Serial.println(packet);
   if (packet.startsWith(setTimeCommand)){
     previousTime = currentTime;
     String currentTimeString = packet.substring(1,3);
@@ -420,7 +448,10 @@ void setup() {
   
   initWebserver();
 
-  AsyncElegantOTA.begin(&server);    // Start ElegantOTA
+  ElegantOTA.begin(&server);    // Start ElegantOTA
+  ElegantOTA.onStart(onOTAStart);
+  ElegantOTA.onProgress(onOTAProgress);
+  ElegantOTA.onEnd(onOTAEnd);
   server.begin();
   Serial.println("HTTP server started");
 
@@ -442,6 +473,8 @@ void drawRS485Info() {
 }
 
 void loop() {
+
+   ElegantOTA.loop(); 
 
   if (RS485mode == false){
     if (receivedFlag) { 
@@ -475,7 +508,7 @@ void loop() {
     client_check();
     }
 
-  AsyncElegantOTA.loop(); 
+ 
 
   if (timeIsUp()) {
     horn.requestHonk();
